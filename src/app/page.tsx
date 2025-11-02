@@ -48,7 +48,7 @@ import {
 } from '@mui/icons-material';
 import io, { Socket } from 'socket.io-client';
 import { DashboardData, ProcessParameters } from '../types/models';
-import { buildWsUrl } from '../config/api';
+import { buildWsUrl, API_BASE_URL, WS_URL } from '../config/api';
 import AIAssistant from '../components/AIAssistant';
 import RealTimeTestDashboard from '../components/RealTimeTestDashboard';
 import QualityConsistencyMonitor from '../components/QualityConsistencyMonitor';
@@ -1558,7 +1558,20 @@ export default function FuturisticDashboard() {
     }
   };
 
-  if (!dashboardData) {
+  // Show loading screen only for the first 10 seconds, then show error with mock data option
+  const [loadingTimeout, setLoadingTimeout] = useState(false);
+  
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!dashboardData) {
+        setLoadingTimeout(true);
+      }
+    }, 10000); // 10 seconds timeout
+    
+    return () => clearTimeout(timer);
+  }, [dashboardData]);
+
+  if (!dashboardData && !loadingTimeout) {
     return (
       <Box sx={{ display: 'flex', minHeight: '100vh' }}>
         <Drawer
@@ -1596,14 +1609,14 @@ export default function FuturisticDashboard() {
                     }} 
                   />
                   <Chip 
-                    label={isConnected ? "🟢 CONNECTED" : "🔴 DISCONNECTED"} 
+                    label={isConnected ? "🟢 CONNECTED" : "🔴 CONNECTING..."} 
                     size="small" 
                     sx={{ 
-                      backgroundColor: isConnected ? 'rgba(0, 230, 118, 0.2)' : 'rgba(244, 67, 54, 0.2)', 
-                      color: isConnected ? '#00E676' : '#F44336', 
+                      backgroundColor: isConnected ? 'rgba(0, 230, 118, 0.2)' : 'rgba(255, 152, 0, 0.2)', 
+                      color: isConnected ? '#00E676' : '#FF9800', 
                       fontSize: '0.7rem',
                       fontWeight: 600,
-                      animation: isConnected ? 'none' : 'pulse 2s infinite'
+                      animation: 'pulse 2s infinite'
                     }} 
                   />
                 </Box>
@@ -1636,7 +1649,119 @@ export default function FuturisticDashboard() {
             <Typography variant="h6" color="text.secondary" gutterBottom>
               Initializing Neural Network...
             </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              Connecting to backend: {API_BASE_URL}
+            </Typography>
             <LinearProgress sx={{ mt: 2, width: 400, height: 6, borderRadius: 3 }} />
+          </Box>
+        </Box>
+      </Box>
+    );
+  }
+  
+  // If timeout and still no data, show error with option to use mock data
+  if (!dashboardData && loadingTimeout) {
+    return (
+      <Box sx={{ display: 'flex', minHeight: '100vh' }}>
+        <Drawer
+          variant="permanent"
+          sx={{
+            width: drawerWidth,
+            flexShrink: 0,
+            '& .MuiDrawer-paper': {
+              width: drawerWidth,
+              boxSizing: 'border-box',
+              background: 'linear-gradient(180deg, #0A0E1A 0%, #1A1F2E 50%, #242B3D 100%)',
+              border: 'none',
+              borderRight: '1px solid rgba(0, 229, 255, 0.1)',
+            },
+          }}
+        >
+          <Box sx={{ p: 2, display: 'flex', alignItems: 'center', minHeight: 80 }}>
+            <Avatar sx={{ background: 'linear-gradient(135deg, #F44336, #E53935)', mr: sidebarOpen ? 1.5 : 0 }}>
+              <WarningIcon />
+            </Avatar>
+            {sidebarOpen && (
+              <Box>
+                <Typography variant="h6" sx={{ color: '#F44336', fontWeight: 700 }}>
+                  CementAI NEXUS
+                </Typography>
+                <Chip 
+                  label="🔴 CONNECTION FAILED" 
+                  size="small" 
+                  sx={{ 
+                    backgroundColor: 'rgba(244, 67, 54, 0.2)', 
+                    color: '#F44336', 
+                    fontSize: '0.7rem',
+                    fontWeight: 600
+                  }} 
+                />
+              </Box>
+            )}
+          </Box>
+        </Drawer>
+        
+        <Box
+          component="main"
+          sx={{
+            flexGrow: 1,
+            marginLeft: `${drawerWidth}px`,
+            background: 'linear-gradient(135deg, #0A0E1A 0%, #1A1F2E 50%, #242B3D 100%)',
+            minHeight: '100vh',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <Box textAlign="center" sx={{ maxWidth: 600, px: 3 }}>
+            <WarningIcon sx={{ fontSize: 80, color: '#F44336', mb: 2 }} />
+            <Typography variant="h3" gutterBottom sx={{ 
+              color: '#F44336',
+              fontWeight: 700
+            }}>
+              Connection Failed
+            </Typography>
+            <Typography variant="h6" color="text.secondary" gutterBottom>
+              Unable to connect to backend server
+            </Typography>
+            <Alert severity="error" sx={{ mt: 3, mb: 3, textAlign: 'left' }}>
+              <Typography variant="body2" gutterBottom>
+                <strong>Backend URL:</strong> {API_BASE_URL}
+              </Typography>
+              <Typography variant="body2" gutterBottom>
+                <strong>WebSocket URL:</strong> {WS_URL}
+              </Typography>
+              <Typography variant="body2" sx={{ mt: 2 }}>
+                <strong>Possible issues:</strong>
+              </Typography>
+              <ul style={{ margin: '8px 0', paddingLeft: '20px' }}>
+                <li>Backend server is not running or sleeping (Render free tier)</li>
+                <li>Network connectivity issues</li>
+                <li>CORS configuration problems</li>
+                <li>Incorrect backend URL in .env.local</li>
+              </ul>
+            </Alert>
+            <Button
+              variant="contained"
+              size="large"
+              onClick={() => window.location.reload()}
+              sx={{
+                backgroundColor: '#00E5FF',
+                color: '#000',
+                fontWeight: 600,
+                px: 4,
+                py: 1.5,
+                '&:hover': {
+                  backgroundColor: '#40C4FF'
+                }
+              }}
+            >
+              Retry Connection
+            </Button>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 3 }}>
+              Note: Render free tier services sleep after 15 minutes of inactivity.<br />
+              First request may take 30-60 seconds to wake up the server.
+            </Typography>
           </Box>
         </Box>
       </Box>
