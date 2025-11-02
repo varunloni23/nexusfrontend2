@@ -51,7 +51,7 @@ export default function AIAssistant({ dashboardData }: AIAssistantProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://backend2-0-lrcn.onrender.com';
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://nexus2-0.onrender.com';
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });

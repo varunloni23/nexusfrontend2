@@ -1,7 +1,7 @@
 // API Configuration for CementAI Nexus Frontend
 // Uses environment variables from .env.local
-export const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
-export const WS_URL = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:3001';
+export const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://nexus2-0.onrender.com';
+export const WS_URL = process.env.NEXT_PUBLIC_WS_URL || 'wss://nexus2-0.onrender.com';
 
 // API endpoint configuration
 export const API_ENDPOINTS = {
