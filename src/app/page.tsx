@@ -1394,21 +1394,26 @@ export default function FuturisticDashboard() {
   useEffect(() => {
     // Initialize socket connection using the WebSocket URL from config
     const wsUrl = buildWsUrl();
-    console.log('Connecting to WebSocket:', wsUrl);
+    console.log('🔌 Connecting to WebSocket:', wsUrl);
+    console.log('🌐 Using backend URL:', API_BASE_URL);
     
     const newSocket = io(wsUrl, {
       transports: ['polling', 'websocket'], // Try polling first for Render compatibility
       upgrade: true,
       rememberUpgrade: true,
-      timeout: 30000, // Increased timeout for Render
-      forceNew: false,
+      timeout: 60000, // Increased timeout to 60 seconds for Render free tier
+      forceNew: true, // Force new connection each time
       reconnection: true,
-      reconnectionDelay: 2000, // Slightly longer delay
-      reconnectionAttempts: 10,
-      reconnectionDelayMax: 10000, // Increased max delay
+      reconnectionDelay: 3000, // 3 second delay between attempts
+      reconnectionAttempts: 15, // More attempts
+      reconnectionDelayMax: 15000, // Max 15 seconds between attempts
       autoConnect: true,
       secure: true, // Force secure connection
-      rejectUnauthorized: false // For development/testing
+      rejectUnauthorized: false, // For development/testing
+      withCredentials: true, // Include credentials for CORS
+      extraHeaders: {
+        'Origin': typeof window !== 'undefined' ? window.location.origin : ''
+      }
     });
 
     // setSocket(newSocket); // Remove unused socket setter
